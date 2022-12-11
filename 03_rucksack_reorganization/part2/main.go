@@ -15,14 +15,17 @@ func priority(r uint8) int {
 }
 
 func main() {
-	file, err := os.Open("./input_test.txt")
+	file, err := os.Open("./input.txt")
 	if err != nil {
 		panic(err)
 	}
 
 	reader := bufio.NewReader(file)
-	var total int
-	var end bool
+	var (
+		total, i    int
+		end         bool
+		commonGroup map[uint8]struct{}
+	)
 	for {
 		if end {
 			break
@@ -33,30 +36,32 @@ func main() {
 			end = true
 		}
 		r = strings.ReplaceAll(r, "\n", "")
-		if len(r) == 0 {
-			break
-		}
-		firstCompartment := make(map[uint8]struct{})
+		content := make(map[uint8]struct{})
 		fmt.Println(r)
-		for i := 0; i < len(r)/2; i++ {
-			item := r[i]
-			firstCompartment[item] = struct{}{}
+		for i := 0; i < len(r); i++ {
+			content[r[i]] = struct{}{}
 		}
-		common := make(map[uint8]struct{})
-		for i := len(r) / 2; i < len(r); i++ {
-			_, ok := firstCompartment[r[i]]
-			if ok {
-				common[r[i]] = struct{}{}
+
+		if i%3 == 0 {
+			fmt.Println("common", commonGroup)
+			fmt.Println()
+			var gc int
+			for item := range commonGroup {
+				itemPrio := priority(item)
+				gc += itemPrio
+			}
+			total += gc
+			commonGroup = content
+			i++
+			continue
+		}
+		for c := range commonGroup {
+			_, ok := content[c]
+			if !ok {
+				delete(commonGroup, c)
 			}
 		}
-		var rt int
-		for item := range common {
-			itemPrio := priority(item)
-			fmt.Println("common ", string(item), itemPrio)
-			rt += itemPrio
-		}
-		total += rt
-		fmt.Println()
+		i++
 	}
 	fmt.Println(total)
 }
