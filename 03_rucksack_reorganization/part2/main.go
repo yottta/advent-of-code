@@ -43,8 +43,6 @@ func main() {
 		}
 
 		if i%3 == 0 {
-			fmt.Println("common", commonGroup)
-			fmt.Println()
 			var gc int
 			for item := range commonGroup {
 				itemPrio := priority(item)

@@ -40,38 +40,38 @@ func (m Move) fightPoints(mo Move) int {
 	return 0
 }
 
-func parseMove(s string) (Move, error) {
+func parseMove(s string) Move {
 	if s == "A" || s == "X" {
-		return Rock, nil
+		return Rock
 	}
 	if s == "B" || s == "Y" {
-		return Paper, nil
+		return Paper
 	}
 	if s == "C" || s == "Z" {
-		return Scissor, nil
+		return Scissor
 	}
-	return 0, fmt.Errorf("invalid value %s", s)
+	panic(fmt.Errorf("invalid value %s", s))
 }
 
-func moveToPerform(enemy Move, indication string) (Move, error) {
+func moveToPerform(enemy Move, indication string) Move {
 	move, ok := moveBeatMove[enemy]
 	if !ok {
-		return 0, fmt.Errorf("wrong input. no winning move for %d", enemy)
+		panic(fmt.Errorf("wrong input. no winning move for %d", enemy))
 	}
 	switch indication {
 	case "X":
-		return move, nil
+		return move
 	case "Y":
-		return enemy, nil
+		return enemy
 	case "Z":
 		for k, v := range moveBeatMove {
 			if v == enemy {
-				return k, nil
+				return k
 			}
 		}
-		return 0, fmt.Errorf("misconfiguration. there is no move that beats %d", enemy)
+		panic(fmt.Errorf("misconfiguration. there is no move that beats %d", enemy))
 	default:
-		return 0, fmt.Errorf("wrong indication %s", indication)
+		panic(fmt.Errorf("wrong indication %s", indication))
 	}
 }
 
@@ -95,14 +95,8 @@ func main() {
 			fmt.Printf("invalid input %s\n", r)
 			continue
 		}
-		enemyMove, err := parseMove(split[0])
-		if err != nil {
-			panic(err)
-		}
-		myMove, err := moveToPerform(enemyMove, split[1])
-		if err != nil {
-			panic(err)
-		}
+		enemyMove := parseMove(split[0])
+		myMove := moveToPerform(enemyMove, split[1])
 		totalPoints += myMove.fightPoints(enemyMove) + int(myMove)
 	}
 	fmt.Println(totalPoints)

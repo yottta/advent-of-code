@@ -40,17 +40,17 @@ func (m Move) fightPoints(mo Move) int {
 	return 0
 }
 
-func parseMove(s string) (Move, error) {
+func parseMove(s string) Move {
 	if s == "A" || s == "X" {
-		return Rock, nil
+		return Rock
 	}
 	if s == "B" || s == "Y" {
-		return Paper, nil
+		return Paper
 	}
 	if s == "C" || s == "Z" {
-		return Scissor, nil
+		return Scissor
 	}
-	return 0, fmt.Errorf("invalid value %s", s)
+	panic(fmt.Errorf("invalid value %s", s))
 }
 
 func main() {
@@ -73,14 +73,8 @@ func main() {
 			fmt.Printf("invalid input %s\n", r)
 			continue
 		}
-		enemyMove, err := parseMove(split[0])
-		if err != nil {
-			panic(err)
-		}
-		myMove, err := parseMove(split[1])
-		if err != nil {
-			panic(err)
-		}
+		enemyMove := parseMove(split[0])
+		myMove := parseMove(split[1])
 		totalPoints += myMove.fightPoints(enemyMove) + int(myMove)
 	}
 	fmt.Println(totalPoints)

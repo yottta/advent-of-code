@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	aoc "github.com/yottta/aoc2022/00_aoc"
 	"os"
 	"strconv"
 	"strings"
@@ -13,21 +14,15 @@ type Range struct {
 	stop  int
 }
 
-func must(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
 func parseRange(in string) Range {
 	split := strings.Split(in, "-")
 	if len(split) != 2 {
 		panic(fmt.Errorf("wrong input: %s", in))
 	}
 	start, err := strconv.Atoi(split[0])
-	must(err)
+	aoc.Must(err)
 	end, err := strconv.Atoi(split[1])
-	must(err)
+	aoc.Must(err)
 	return Range{
 		start: start,
 		stop:  end,
