@@ -51,22 +51,10 @@ func (s *session) cd(dirName string) error {
 		_, ok := s.dirs[dirName]
 		if !ok {
 			s.dirs[dirName] = []file{}
-			//return fmt.Errorf("no dir found for %s", dirName)
 		}
 		fullPath := path.Join(*s.currDir, dirName)
 		s.currDir = &fullPath
 		return nil
-		//for _, f := range files {
-		//	if !f.dir {
-		//		continue
-		//	}
-		//	if f.name == dirName {
-		//		fullPath := *s.currDir + f.name
-		//		s.currDir = &fullPath
-		//		return nil
-		//	}
-		//}
-		//return fmt.Errorf("currDir %s does not contain %s", *s.currDir, dirName)
 	}
 }
 
