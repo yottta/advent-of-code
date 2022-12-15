@@ -8,4 +8,5 @@ use (
 	./04_camp_cleanup
 	./05_supply_stacks
 	./06_tuning_trouble
+	./07_no_space_left_on_device
 )
