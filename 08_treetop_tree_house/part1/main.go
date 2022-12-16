@@ -67,7 +67,7 @@ func (f *forest) addTree(h int, newRow bool) {
 		f.colHighest = append(f.colHighest, e)
 	}
 	f.updateTreeVisibility(e)
-	f.updateTopLeftVisibility(e)
+	f.updateNeighborsVisibility(e)
 }
 
 func (f *forest) updateTreeVisibility(t *tree) {
@@ -97,7 +97,7 @@ func (f *forest) updateTreeVisibility(t *tree) {
 	}
 }
 
-func (f *forest) updateTopLeftVisibility(newT *tree) {
+func (f *forest) updateNeighborsVisibility(newT *tree) {
 	if newT.col == 0 || newT.line == 0 {
 		return // do not update visibility of the left top edges
 	}
