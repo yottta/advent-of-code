@@ -11,4 +11,5 @@ use (
 	./07_no_space_left_on_device
 	./08_treetop_tree_house
 	./09_rope_bridge
+	./10_cathode_ray
 )
