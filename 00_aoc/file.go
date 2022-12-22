@@ -14,3 +14,7 @@ func ReadFile(p string) ([]string, error) {
 	lines := strings.Split(strings.TrimSpace(string(c)), "\n")
 	return lines, nil
 }
+
+func ReadFileBytes(p string) ([]byte, error) {
+	return os.ReadFile(p)
+}
