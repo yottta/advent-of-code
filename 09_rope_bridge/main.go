@@ -1,66 +1,111 @@
 package main
 
 import (
-	"bufio"
+	"flag"
 	"fmt"
-	"os"
+	aoc "github.com/yottta/aoc2022/00_aoc"
 	"strconv"
 	"strings"
-
-	aoc "github.com/yottta/aoc2022/00_aoc"
 )
 
-type point struct {
-	name string
-	x    int
-	y    int
-}
+var verbose bool
 
 func main() {
-	var test bool
-	file, err := os.Open("./input.txt")
-	test = false
+	var (
+		dataFilePath string
+		partToRun    string
+	)
+	flag.StringVar(&dataFilePath, "d", "./input.txt", "The path of the file containing the data for the current problem")
+	flag.StringVar(&partToRun, "p", "1", "The part of the problem to run, in case the problem has more than one parts")
+	flag.BoolVar(&verbose, "v", false, "Add this for more information during running if available")
+	flag.Parse()
 
+	aoc.Verbose(verbose)
+
+	content, err := aoc.ReadFile(dataFilePath)
 	aoc.Must(err)
 
-	reader := bufio.NewReader(file)
-	var (
-		end            bool
-		knotsPositions = make([]point, 10)
-		// tracking the 9th knot
-		points []point
-	)
-	for i := 0; i < 10; i++ {
-		if i == 0 {
-			knotsPositions[i] = point{
-				name: "H",
-			}
-			continue
-		}
-		knotsPositions[i] = point{
-			name: strconv.Itoa(i),
-		}
+	switch partToRun {
+	case "1":
+		part1(content)
+	case "2":
+		part2(content)
+	default:
+		panic(fmt.Errorf("no part '%s' configured", partToRun))
 	}
+}
+
+func part1(content []string) {
+	var (
+		knotsPositions = buildKnots(2)
+		points         []point
+	)
 	points = append(points, knotsPositions[len(knotsPositions)-1])
-	for {
-		if end {
-			break
-		}
-		line, err := reader.ReadString('\n')
-		if err != nil {
-			fmt.Println("error reading string", err)
-			end = true
-		}
-		line = strings.ReplaceAll(line, "\n", "")
-		if len(line) == 0 {
-			continue
-		}
+	for _, line := range content {
 		parts := strings.Split(line, " ")
 		steps, err := strconv.Atoi(parts[1])
 		aoc.Must(err)
-		if test {
-			fmt.Println(line)
+		aoc.Log(line)
+		for i := 0; i < steps; i++ {
+			oldHeadPos := knotsPositions[0]
+			switch parts[0] {
+			case "R":
+				knotsPositions[0].x++
+				if distance(knotsPositions[0], knotsPositions[1]) > 1 {
+					knotsPositions[1].x = oldHeadPos.x
+					knotsPositions[1].y = oldHeadPos.y
+					points = append(points, knotsPositions[1])
+				}
+			case "L":
+				knotsPositions[0].x--
+				if distance(knotsPositions[0], knotsPositions[1]) > 1 {
+					knotsPositions[1].y = oldHeadPos.y
+					knotsPositions[1].x = oldHeadPos.x
+					points = append(points, knotsPositions[1])
+				}
+			case "U":
+				knotsPositions[0].y++
+				if distance(knotsPositions[0], knotsPositions[1]) > 1 {
+					knotsPositions[1].y = oldHeadPos.y
+					knotsPositions[1].x = oldHeadPos.x
+					points = append(points, knotsPositions[1])
+				}
+			case "D":
+				knotsPositions[0].y--
+				if distance(knotsPositions[0], knotsPositions[1]) > 1 {
+					knotsPositions[1].y = oldHeadPos.y
+					knotsPositions[1].x = oldHeadPos.x
+					points = append(points, knotsPositions[1])
+				}
+			default:
+				panic("invalid instruction")
+			}
+			drawPoints(knotsPositions...)
 		}
+	}
+	drawPath(points)
+
+	res := make(map[point]struct{})
+	for _, p := range points {
+		res[p] = struct{}{}
+	}
+	fmt.Println(len(res))
+}
+
+func part2(content []string) {
+	var (
+		knotsPositions = buildKnots(10)
+		// traveled by the last knot
+		points []point
+	)
+
+	points = append(points, knotsPositions[len(knotsPositions)-1])
+	for _, line := range content {
+		parts := strings.Split(line, " ")
+		steps, err := strconv.Atoi(parts[1])
+		aoc.Must(err)
+
+		aoc.Log(line)
 		for i := 0; i < steps; i++ {
 			var deltaX, deltaY int
 			switch parts[0] {
@@ -101,11 +146,9 @@ func main() {
 			}
 		}
 
-		if test {
-			fmt.Println(line)
-			drawPoints(knotsPositions...)
-			fmt.Println()
-		}
+		aoc.Log(line)
+		drawPoints(knotsPositions...)
+		aoc.Log("")
 	}
 
 	drawPath(points)
@@ -117,7 +160,29 @@ func main() {
 	fmt.Println(len(res))
 }
 
+func buildKnots(size int) []point {
+	res := make([]point, size)
+	res[0] = point{
+		name: "H",
+	}
+	for i := 1; i < size; i++ {
+		res[i] = point{
+			name: strconv.Itoa(i),
+		}
+	}
+	return res
+}
+
+type point struct {
+	name string
+	x    int
+	y    int
+}
+
 func drawPath(points []point) {
+	if !verbose {
+		return
+	}
 	var minX, minY int
 	for _, p := range points {
 		if p.x < minX {
@@ -170,6 +235,10 @@ func drawPath(points []point) {
 
 // just for local testing with a limited set of data points
 func drawPoints(pts ...point) {
+	if !verbose {
+		return
+	}
+
 	xSize := 26
 	ySize := 21
 	startingPoint := point{"s", 11, 5}
@@ -206,9 +275,20 @@ func drawPoints(pts ...point) {
 	fmt.Println()
 }
 
+func distance(p1, p2 point) int {
+	return maxInt(absInt(p1.x-p2.x), absInt(p1.y-p2.y))
+}
+
 func absInt(i int) int {
 	if i >= 0 {
 		return i
 	}
 	return i * -1
+}
+
+func maxInt(i1, i2 int) int {
+	if i1 > i2 {
+		return i1
+	}
+	return i2
 }
