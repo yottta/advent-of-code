@@ -3,18 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
-	aoc "github.com/yottta/aoc2022/00_aoc"
 	"strconv"
+	
+	aoc "github.com/yottta/aoc2022/00_aoc"
 )
 
 var verbose bool
-
-func runLog(f func()) {
-	if !verbose {
-		return
-	}
-	f()
-}
 
 func main() {
 	var (
@@ -25,6 +19,8 @@ func main() {
 	flag.StringVar(&partToRun, "p", "1", "The part of the problem to run, in case the problem has more than one parts")
 	flag.BoolVar(&verbose, "v", false, "Add this for more information during running if available")
 	flag.Parse()
+
+	aoc.Verbose(verbose)
 
 	content, err := aoc.ReadFile(dataFilePath)
 	aoc.Must(err)
@@ -57,13 +53,9 @@ func part1(content []string) {
 			if f.trees[i][j].visibility.visible() {
 				totalVisible++
 			}
-			runLog(func() {
-				fmt.Printf("%d(%s) ", f.trees[i][j].height, string(strconv.FormatBool(f.trees[i][j].visibility.visible())[0]))
-			})
+			aoc.Logf("%d(%s) ", f.trees[i][j].height, string(strconv.FormatBool(f.trees[i][j].visibility.visible())[0]))
 		}
-		runLog(func() {
-			fmt.Println()
-		})
+		aoc.Log("")
 	}
 	fmt.Println(totalVisible)
 }
@@ -88,13 +80,9 @@ func part2(content []string) {
 			if scenery > maxScenery {
 				maxScenery = scenery
 			}
-			runLog(func() {
-				fmt.Printf("%d(%00d) ", t.height, scenery)
-			})
+			aoc.Logf("%d(%00d) ", t.height, scenery)
 		}
-		runLog(func() {
-			fmt.Println()
-		})
+		aoc.Log("")
 	}
 	fmt.Println(maxScenery)
 }
