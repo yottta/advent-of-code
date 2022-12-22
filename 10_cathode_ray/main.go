@@ -1,20 +1,74 @@
 package main
 
 import (
-	"bufio"
+	"flag"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 
 	aoc "github.com/yottta/aoc2022/00_aoc"
 )
 
-func main() {
-	file, err := os.Open("../input.txt")
-	aoc.Must(err)
-	reader := bufio.NewReader(file)
+var verbose bool
 
+func main() {
+	var (
+		dataFilePath string
+		partToRun    string
+	)
+	flag.StringVar(&dataFilePath, "d", "./input.txt", "The path of the file containing the data for the current problem")
+	flag.StringVar(&partToRun, "p", "1", "The part of the problem to run, in case the problem has more than one parts")
+	flag.BoolVar(&verbose, "v", false, "Add this for more information during running if available")
+	flag.Parse()
+
+	aoc.Verbose(verbose)
+
+	content, err := aoc.ReadFile(dataFilePath)
+	aoc.Must(err)
+
+	switch partToRun {
+	case "1":
+		part1(content)
+	case "2":
+		part2(content)
+	default:
+		panic(fmt.Errorf("no part '%s' configured", partToRun))
+	}
+}
+
+func part1(content []string) {
+	c := initCpu(map[string]*register{
+		"X": {
+			value: 1,
+		},
+	})
+
+	valuesPerCycle := map[int]int{
+		20:  -1,
+		60:  -1,
+		100: -1,
+		140: -1,
+		180: -1,
+		220: -1,
+	}
+	c.cycleListeners = append(c.cycleListeners, func(cycleNo int) {
+		_, ok := valuesPerCycle[cycleNo]
+		if !ok {
+			return
+		}
+		valuesPerCycle[cycleNo] = c.registers["X"].value
+	})
+
+	c.processInput(content)
+
+	var total int
+	for cy, regVal := range valuesPerCycle {
+		total += cy * regVal
+	}
+	fmt.Println(total)
+}
+
+func part2(content []string) {
 	cr := newCrt(240)
 	c := initCpu(map[string]*register{
 		"X": {
@@ -23,28 +77,8 @@ func main() {
 	})
 	c.cycleListeners = append(c.cycleListeners, cr.litBit)
 	c.registerChangeListener = append(c.registerChangeListener, cr.repositionSprite)
-	var (
-		end bool
-		idx int
-	)
-	for {
-		idx++
-		if end {
-			break
-		}
-		line, err := reader.ReadString('\n')
-		if err != nil {
-			fmt.Println("error reading string", err)
-			end = true
-		}
-		line = strings.ReplaceAll(line, "\n", "")
-		if len(line) == 0 {
-			continue
-		}
-		commandAndArgs := strings.Split(line, " ")
-		c.runCommand(commandAndArgs[0], commandAndArgs[1:]...)
-	}
-	fmt.Println(c.cyclesDone)
+
+	c.processInput(content)
 }
 
 func initCpu(regs map[string]*register) *cpu {
@@ -57,12 +91,19 @@ func initCpu(regs map[string]*register) *cpu {
 type cpu struct {
 	cyclesDone             int
 	registers              map[string]*register
-	cycleListeners         []func()
+	cycleListeners         []func(int)
 	registerChangeListener []func(regVal int)
 }
 
 type register struct {
 	value int
+}
+
+func (c *cpu) processInput(inputCmds []string) {
+	for _, line := range inputCmds {
+		commandAndArgs := strings.Split(line, " ")
+		c.runCommand(commandAndArgs[0], commandAndArgs[1:]...)
+	}
 }
 
 func (c *cpu) runCommand(cmd string, args ...string) {
@@ -87,15 +128,15 @@ func (c *cpu) notifyRegisterChange(newVal int) {
 	}
 }
 
-func (c *cpu) notifyCycle() {
+func (c *cpu) notifyCycle(noOfCycles int) {
 	for _, l := range c.cycleListeners {
-		l()
+		l(noOfCycles)
 	}
 }
 
 func (c *cpu) increaseCycle() {
 	c.cyclesDone++
-	c.notifyCycle()
+	c.notifyCycle(c.cyclesDone)
 }
 
 type crt struct {
@@ -112,7 +153,7 @@ func newCrt(size int) *crt {
 	}
 }
 
-func (cr *crt) litBit() {
+func (cr *crt) litBit(_ int) {
 	upp := cr.spritePos - 1 + 2
 	low := cr.spritePos - 1
 	bit := cr.currentBit - cr.currentRow*40
