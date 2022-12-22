@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+
 	aoc "github.com/yottta/aoc2022/00_aoc"
 )
 

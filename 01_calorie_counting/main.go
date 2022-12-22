@@ -19,9 +19,7 @@ func main() {
 	flag.StringVar(&partToRun, "p", "1", "The part of the problem to run, in case the problem has more than one parts")
 	flag.Parse()
 	content, err := aoc.ReadFile(dataFilePath)
-	if err != nil {
-		panic(err)
-	}
+	aoc.Must(err)
 
 	switch partToRun {
 	case "1":

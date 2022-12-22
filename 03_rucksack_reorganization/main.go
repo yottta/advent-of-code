@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+
 	aoc "github.com/yottta/aoc2022/00_aoc"
 )
 
@@ -14,10 +15,9 @@ func main() {
 	flag.StringVar(&dataFilePath, "d", "./input.txt", "The path of the file containing the data for the current problem")
 	flag.StringVar(&partToRun, "p", "1", "The part of the problem to run, in case the problem has more than one parts")
 	flag.Parse()
+
 	content, err := aoc.ReadFile(dataFilePath)
-	if err != nil {
-		panic(err)
-	}
+	aoc.Must(err)
 
 	switch partToRun {
 	case "1":
