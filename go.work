@@ -12,4 +12,5 @@ use (
 	./08_treetop_tree_house
 	./09_rope_bridge
 	./10_cathode_ray
+	./11_monkey_in_the_middle
 )
