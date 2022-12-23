@@ -37,11 +37,27 @@ func main() {
 }
 
 func part1(content []string) {
-	monkeys := createMonkeys(content)
+	monkeys := createMonkeys(content, false)
 	solve(monkeys, 20)
 }
 
 func part2(content []string) {
+	monkeys := createMonkeys(content, true)
+
+	// since the part 2 is stating that
+	// "Worry levels are no longer divided by three after each item is inspected; you'll need to find another way to keep your worry levels manageable",
+	// the worry levels will always increase now
+	// BUT we can't just mod by any monkey's testBy number, because they're all throwing the items around,
+	// so find a shared common denominator that can be used to keep the numbers under overflow
+	bigMod := 1
+	for _, m := range monkeys {
+		bigMod = bigMod * m.targetRes.divBy
+	}
+	for i := range monkeys {
+		monkeys[i].mod.mod = &bigMod
+	}
+
+	solve(monkeys, 10000)
 }
 
 func solve(monkeys []monkey, rounds int) {
@@ -60,7 +76,7 @@ func solve(monkeys []monkey, rounds int) {
 	fmt.Println(monkeys[0].itemsAnalyzed * monkeys[1].itemsAnalyzed)
 }
 
-func createMonkeys(content []string) []monkey {
+func createMonkeys(content []string, ignoreRelief bool) []monkey {
 	var (
 		res     []monkey
 		current monkey
@@ -70,8 +86,9 @@ func createMonkeys(content []string) []monkey {
 			continue
 		}
 		if strings.TrimSpace(line) == "" {
+			current.ignoreRelief = ignoreRelief
 			res = append(res, current)
-			current = monkey{id: current.id + 1}
+			current = monkey{id: current.id + 1, ignoreRelief: ignoreRelief}
 			continue
 		}
 		if strings.Contains(line, "Starting") {
@@ -112,6 +129,7 @@ type monkey struct {
 	mod           itemModifier
 	targetRes     targetResolver
 	itemsAnalyzed int
+	ignoreRelief  bool
 }
 
 // returns a map[target_monkey][]items_to_be_given_to_the_target
@@ -120,7 +138,9 @@ func (m *monkey) analyzeItems() map[int][]item {
 	for _, i := range m.items {
 		m.itemsAnalyzed++
 		newVal := m.mod.apply(i.worryLvl)
-		newVal = newVal / 3
+		if !m.ignoreRelief {
+			newVal = newVal / 3
+		}
 		target := m.targetRes.resolveTarget(newVal)
 		items := res[target]
 		items = append(items, item{worryLvl: newVal})
@@ -201,14 +221,18 @@ func parseOperation(sign string) (operation, error) {
 // new = old * old * 4
 // new = 5 + old
 type itemModifier struct {
-	v  []variable
-	op operation
+	v   []variable
+	op  operation
+	mod *int
 }
 
 func (im itemModifier) apply(on int) int {
 	res := im.v[0].resolvedOrDefault(on)
 	for i := 1; i < len(im.v); i++ {
 		res = im.op.apply(res, im.v[i].resolvedOrDefault(on))
+	}
+	if im.mod != nil {
+		res = res % *im.mod
 	}
 	return res
 }
