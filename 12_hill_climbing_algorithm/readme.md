@@ -58,9 +58,12 @@ This path reaches the goal in only 29 steps, the fewest possible.
 
 What is the fewest steps required to move starting from any square with elevation a to the location that should get the best signal?
 
-Answer:
+Your puzzle answer was 399.
 
+Both parts of this puzzle are complete! They provide two gold stars: **
 
-Although it hasn't changed, you can still get your puzzle input.
+At this point, you should return to your Advent calendar and try another puzzle.
+
+If you still want to see it, you can get your puzzle input.
 
 You can also [Share] this puzzle.

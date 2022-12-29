@@ -37,13 +37,23 @@ func main() {
 func part1(content []string) {
 	m := parseMountainHeights(content)
 	printMountain(m)
-	lastStep := m.navigate()
+	lastStep := m.navigate(false)
+	if lastStep.stepNo < 0 {
+		panic("no solution")
+	}
 	printSolution(m, &lastStep)
 	fmt.Println(lastStep.stepNo)
-
 }
 
 func part2(content []string) {
+	m := parseMountainHeights(content)
+	printMountain(m)
+	lastStep := m.navigate(true)
+	if lastStep.stepNo < 0 {
+		panic("no solution")
+	}
+	printSolution(m, &lastStep)
+	fmt.Println(lastStep.stepNo)
 }
 
 func parseMountainHeights(content []string) mountain {
@@ -97,7 +107,7 @@ type mountain struct {
 	end   *step
 }
 
-func (m *mountain) navigate() navigateStep {
+func (m *mountain) navigate(backwards bool) navigateStep {
 	var (
 		queue []navigateStep
 		seen  = map[point]struct{}{}
@@ -109,15 +119,24 @@ func (m *mountain) navigate() navigateStep {
 		}
 	)
 
-	queue = append(queue, navigateStep{
-		step:   m.start,
-		stepNo: 0,
-	})
+	if backwards {
+		queue = append(queue, navigateStep{
+			step:   m.end,
+			stepNo: 0,
+		})
+	} else {
+		queue = append(queue, navigateStep{
+			step:   m.start,
+			stepNo: 0,
+		})
+	}
 
 	for len(queue) > 0 {
 		currentStep := queue[0]
 		queue = queue[1:]
-		if currentStep.step == m.end {
+		if backwards && currentStep.step.height == 'a' {
+			return currentStep
+		} else if !backwards && currentStep.step == m.end {
 			return currentStep
 		}
 		if _, ok := seen[currentStep.point]; ok {
@@ -132,7 +151,13 @@ func (m *mountain) navigate() navigateStep {
 				if _, ok := seen[nextStep.point]; ok {
 					continue
 				}
-				if nextStep.height-currentStep.height <= 1 {
+				if backwards && nextStep.height-currentStep.height >= -1 {
+					queue = append(queue, navigateStep{
+						step:     nextStep,
+						stepNo:   currentStep.stepNo + 1,
+						previous: &currentStep,
+					})
+				} else if !backwards && nextStep.height-currentStep.height <= 1 {
 					queue = append(queue, navigateStep{
 						step:     nextStep,
 						stepNo:   currentStep.stepNo + 1,
