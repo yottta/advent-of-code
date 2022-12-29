@@ -13,4 +13,5 @@ use (
 	./09_rope_bridge
 	./10_cathode_ray
 	./11_monkey_in_the_middle
+	./12_hill_climbing_algorithm
 )
