@@ -1,3 +1,3 @@
-module github.com/yottta/aoc2022/00_aoc
+module github.com/yottta/advent-of-code/00_aoc
 
-go 1.19
+go 1.21
