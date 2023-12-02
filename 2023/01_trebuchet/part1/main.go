@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	content, err := aoc.ReadFile("input.txt")
+	content, err := aoc.ReadFile("./input.txt")
 	aoc.Must(err)
 
 	var sum int

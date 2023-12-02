@@ -1,5 +1,5 @@
-# Advent of code 2022
+# Advent of code
 
-Solutions written in Golang for [Advent of Code 2022](https://adventofcode.com/2022).
+Solutions written in Golang for [Advent of Code](https://adventofcode.com).
 
 Each directory contains all the info for each problem.

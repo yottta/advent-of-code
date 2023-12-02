@@ -1,19 +1,7 @@
-go 1.21
+go 1.21.3
 
 use (
 	./00_aoc
-	./2022/01_calorie_counting
-	./2022/02_rock_paper_scissors
-	./2022/03_rucksack_reorganization
-	./2022/04_camp_cleanup
-	./2022/05_supply_stacks
-	./2022/06_tuning_trouble
-	./2022/07_no_space_left_on_device
-	./2022/08_treetop_tree_house
-	./2022/09_rope_bridge
-	./2022/10_cathode_ray
-	./2022/11_monkey_in_the_middle
-	./2022/12_hill_climbing_algorithm
-	./2023/01_trebuchet/part1
-	./2023/01_trebuchet/part2
+	./2022
+	./2023
 )
