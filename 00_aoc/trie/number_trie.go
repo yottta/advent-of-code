@@ -1,4 +1,4 @@
-package main
+package trie
 
 type trieNode struct {
 	children map[rune]*trieNode
@@ -6,15 +6,20 @@ type trieNode struct {
 	isWord   bool
 }
 
+type Trie interface {
+	Insert(s string)
+	Find(s string) (bool, bool)
+}
+
 type trie struct {
 	root *trieNode
 }
 
-func newTrie() *trie {
+func NewTrie() Trie {
 	return &trie{root: &trieNode{children: make(map[rune]*trieNode)}}
 }
 
-func (t *trie) insert(s string) {
+func (t *trie) Insert(s string) {
 	node := t.root
 	for _, r := range s {
 		next, ok := node.children[r]
@@ -29,7 +34,7 @@ func (t *trie) insert(s string) {
 
 // first bool = partial match
 // second bool = full match aka is a word
-func (t *trie) find(s string) (bool, bool) {
+func (t *trie) Find(s string) (bool, bool) {
 	node := t.root
 	for _, r := range s {
 		next, ok := node.children[r]
