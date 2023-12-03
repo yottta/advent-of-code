@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"strconv"
-	"strings"
 
 	aoc "github.com/yottta/advent-of-code/00_aoc"
 )
@@ -13,9 +12,10 @@ func main() {
 	aoc.BasicRun(part1, part2)
 }
 
-// TODO use this instead
+var shifts = []int{-1, 1}
+
 const (
-	byteZero, byteNine = 48, 57
+	byteZero, byteNine = '0', '9'
 )
 
 type point struct {
@@ -67,7 +67,7 @@ func findValidPieces(content []string) map[point]piece {
 	return out
 }
 
-func findNumber(schematic [][]string, p point) (int, point, point) {
+func findNumber(schematic [][]byte, p point) (int, point, point) {
 	var (
 		number    int
 		numBuf    bytes.Buffer
@@ -83,7 +83,7 @@ func findNumber(schematic [][]string, p point) (int, point, point) {
 				return -1, start, stop
 			}
 		}
-		if _, err := strconv.Atoi(schematic[p.y][p.x]); err != nil { // TODO use bytes comparison here
+		if schematic[p.y][p.x] < byteZero || schematic[p.y][p.x] > byteNine {
 			if start.x != -1 {
 				stop = prevPoint
 				break
@@ -91,7 +91,7 @@ func findNumber(schematic [][]string, p point) (int, point, point) {
 			p.x++
 			continue
 		}
-		numBuf.WriteString(schematic[p.y][p.x])
+		numBuf.WriteByte(schematic[p.y][p.x])
 		if start.x == -1 {
 			start = p
 		}
@@ -103,31 +103,21 @@ func findNumber(schematic [][]string, p point) (int, point, point) {
 	return number, start, stop
 }
 
-func isValidPiece(schematic [][]string, start, stop point) bool {
-	// check top
-	if start.y > 0 {
-		for i := start.x - 1; i <= stop.x+1; i++ {
-			if i < 0 || i >= len(schematic[start.y-1]) {
+func isValidPiece(schematic [][]byte, start, stop point) bool {
+	// check top and bottom
+	for _, shiftToRow := range shifts { // row shift
+		for x := start.x - 1; x <= stop.x+1; x++ {
+			if x < 0 || x >= len(schematic[0]) {
 				continue
 			}
-			if _, err := strconv.Atoi(schematic[start.y-1][i]); err == nil {
+			y := start.y + shiftToRow
+			if y < 0 || y >= len(schematic) {
 				continue
 			}
-			if schematic[start.y-1][i] != "." {
-				return true
-			}
-		}
-	}
-	// check bottom
-	if start.y < len(schematic)-1 {
-		for i := start.x - 1; i <= stop.x+1; i++ {
-			if i < 0 || i >= len(schematic[start.y+1]) {
+			if schematic[y][x] >= byteZero && schematic[y][x] <= byteNine { // is number
 				continue
 			}
-			if _, err := strconv.Atoi(schematic[start.y+1][i]); err == nil {
-				continue
-			}
-			if schematic[start.y+1][i] != "." {
+			if schematic[y][x] != '.' {
 				return true
 			}
 		}
@@ -135,23 +125,24 @@ func isValidPiece(schematic [][]string, start, stop point) bool {
 	// check right
 	if stop.x < len(schematic[stop.y])-1 {
 		// number cannot be due to previous parsing
-		if schematic[stop.y][stop.x+1] != "." {
+		if schematic[stop.y][stop.x+1] != '.' {
 			return true
 		}
 	}
 	// check left
 	if start.x > 0 {
 		// number cannot be due to previous parsing
-		if schematic[start.y][start.x-1] != "." {
+		if schematic[start.y][start.x-1] != '.' {
 			return true
 		}
 	}
 	return false
 }
-func buildSchematic(content []string) [][]string {
-	var schematic [][]string
+
+func buildSchematic(content []string) [][]byte {
+	var schematic [][]byte
 	for _, line := range content {
-		schematic = append(schematic, strings.Split(line, ""))
+		schematic = append(schematic, []byte(line))
 	}
 	return schematic
 }
@@ -193,45 +184,32 @@ func calculateGearRatio(pieces map[point]piece, gears []point) []int {
 
 func findAdjacentGearPieces(gearPoint point, pieces map[point]piece, seenPieces map[int]struct{}) []piece {
 	var out []piece
-	// check top
-	for i := gearPoint.x - 1; i <= gearPoint.x+1; i++ {
-		if i < 0 {
-			continue
-		}
-		if pc, ok := pieces[point{i, gearPoint.y - 1}]; ok {
-			if _, ok := seenPieces[pc.id]; ok {
-				continue
-			}
-			seenPieces[pc.id] = struct{}{}
-			out = append(out, pc)
-		}
-	}
-	// check bottom
-	for i := gearPoint.x - 1; i <= gearPoint.x+1; i++ {
-		if i < 0 {
-			continue
-		}
-		if pc, ok := pieces[point{i, gearPoint.y + 1}]; ok {
-			if _, ok := seenPieces[pc.id]; ok {
-				continue
-			}
-			seenPieces[pc.id] = struct{}{}
-			out = append(out, pc)
-		}
-	}
-	// check right
-	if pc, ok := pieces[point{gearPoint.x + 1, gearPoint.y}]; ok {
-		if _, ok := seenPieces[pc.id]; !ok {
-			seenPieces[pc.id] = struct{}{}
-			out = append(out, pc)
-		}
 
+	// check top and bottom
+	for _, rowShift := range shifts { // row shift
+		for x := gearPoint.x - 1; x <= gearPoint.x+1; x++ {
+			if x < 0 {
+				continue
+			}
+			y := gearPoint.y + rowShift
+			if pc, ok := pieces[point{x, y}]; ok {
+				if _, ok := seenPieces[pc.id]; ok {
+					continue
+				}
+				seenPieces[pc.id] = struct{}{}
+				out = append(out, pc)
+			}
+		}
 	}
-	// check left
-	if pc, ok := pieces[point{gearPoint.x - 1, gearPoint.y}]; ok {
-		if _, ok := seenPieces[pc.id]; !ok {
-			seenPieces[pc.id] = struct{}{}
-			out = append(out, pc)
+	// check left and right
+	for _, columnShift := range shifts { // column shift
+		x := gearPoint.x + columnShift
+		y := gearPoint.y
+		if pc, ok := pieces[point{x, y}]; ok {
+			if _, ok := seenPieces[pc.id]; !ok {
+				seenPieces[pc.id] = struct{}{}
+				out = append(out, pc)
+			}
 		}
 	}
 	return out
