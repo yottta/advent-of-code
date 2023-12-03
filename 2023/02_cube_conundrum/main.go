@@ -49,7 +49,7 @@ func part1(content []string) {
 			possibleIds = append(possibleIds, i+1)
 		}
 	}
-	fmt.Println(sumList(possibleIds))
+	fmt.Println(aoc.SumList(possibleIds))
 }
 
 func part2(content []string) {
@@ -73,15 +73,7 @@ func part2(content []string) {
 		}
 		gamesPower = append(gamesPower, multiplyMapValues(minimumNeededCubes))
 	}
-	fmt.Println(sumList(gamesPower))
-}
-
-func sumList(l []int) int {
-	var sum int
-	for _, i := range l {
-		sum += i
-	}
-	return sum
+	fmt.Println(aoc.SumList(gamesPower))
 }
 
 func multiplyMapValues(m map[string]int) int {
