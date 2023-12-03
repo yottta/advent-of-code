@@ -157,4 +157,82 @@ func buildSchematic(content []string) [][]string {
 }
 
 func part2(content []string) {
+	pieces := findValidPieces(content)
+	gears := findGears(content)
+	fmt.Println(aoc.SumList(calculateGearRatio(pieces, gears)))
+}
+
+func findGears(content []string) []point {
+	var gears []point
+	for y, line := range content {
+		for x, char := range line {
+			if char == '*' {
+				gears = append(gears, point{x, y})
+			}
+		}
+	}
+	return gears
+}
+
+func calculateGearRatio(pieces map[point]piece, gears []point) []int {
+	var ratios []int
+	var seenPieces = map[int]struct{}{}
+	for _, gear := range gears {
+		gearPieces := findAdjacentGearPieces(gear, pieces, seenPieces)
+		if len(gearPieces) != 2 {
+			continue
+		}
+		gearRation := 1
+		for _, pc := range gearPieces {
+			gearRation *= pc.value
+		}
+		ratios = append(ratios, gearRation)
+	}
+	return ratios
+}
+
+func findAdjacentGearPieces(gearPoint point, pieces map[point]piece, seenPieces map[int]struct{}) []piece {
+	var out []piece
+	// check top
+	for i := gearPoint.x - 1; i <= gearPoint.x+1; i++ {
+		if i < 0 {
+			continue
+		}
+		if pc, ok := pieces[point{i, gearPoint.y - 1}]; ok {
+			if _, ok := seenPieces[pc.id]; ok {
+				continue
+			}
+			seenPieces[pc.id] = struct{}{}
+			out = append(out, pc)
+		}
+	}
+	// check bottom
+	for i := gearPoint.x - 1; i <= gearPoint.x+1; i++ {
+		if i < 0 {
+			continue
+		}
+		if pc, ok := pieces[point{i, gearPoint.y + 1}]; ok {
+			if _, ok := seenPieces[pc.id]; ok {
+				continue
+			}
+			seenPieces[pc.id] = struct{}{}
+			out = append(out, pc)
+		}
+	}
+	// check right
+	if pc, ok := pieces[point{gearPoint.x + 1, gearPoint.y}]; ok {
+		if _, ok := seenPieces[pc.id]; !ok {
+			seenPieces[pc.id] = struct{}{}
+			out = append(out, pc)
+		}
+
+	}
+	// check left
+	if pc, ok := pieces[point{gearPoint.x - 1, gearPoint.y}]; ok {
+		if _, ok := seenPieces[pc.id]; !ok {
+			seenPieces[pc.id] = struct{}{}
+			out = append(out, pc)
+		}
+	}
+	return out
 }
