@@ -29,7 +29,7 @@ func TestTrie2023_01_p2(t *testing.T) {
 		trie.Insert(v)
 	}
 	for k, v := range stringToDigit {
-		t.Run(fmt.Sprintf("%s->%d", k, v), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s->%s", k, v), func(t *testing.T) {
 			for i := len(k); i > 0; i-- {
 				input := k[:i]
 				t.Run(input, func(t *testing.T) {
