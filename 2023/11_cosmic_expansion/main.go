@@ -3,46 +3,17 @@ package main
 import (
 	"fmt"
 	aoc "github.com/yottta/advent-of-code/00_aoc"
-	"github.com/yottta/advent-of-code/00_aoc/queue"
 )
-
-// x, y
-type direction int
-
-const (
-	up direction = iota
-	right
-	down
-	left
-)
-
-var (
-	allDirections = []direction{up, right, down, left}
-)
-
-// Points returns the x and y values of the direction
-func (d direction) Points() (int, int) {
-	switch d {
-	case up:
-		return 0, -1
-	case right:
-		return 1, 0
-	case down:
-		return 0, 1
-	case left:
-		return -1, 0
-	}
-	return 0, 0
-}
 
 type table struct {
 	elements     [][]element
 	emptyRows    []int
 	emptyColumns []int
-	noOfGalaxies int
+	galaxies     []element
 }
 
 type element struct {
+	x, y     int
 	strVal   string
 	idx      int
 	visited  bool
@@ -55,159 +26,54 @@ func main() {
 
 func part1(content []string) {
 	inputTable := readInput(content)
-	printImage(inputTable)
-	expandedTable := expand(inputTable, 10)
-	fmt.Println("After expansion: ")
-	printImage(expandedTable)
 
-	// find min distance between all galaxies
 	var sumOfDistances int
-	for i := 0; i < expandedTable.noOfGalaxies; i++ {
-		for j := i + 1; j < expandedTable.noOfGalaxies; j++ {
-			distance := minDistance(expandedTable, i+1, j+1)
-			//fmt.Printf("%d -> %d: %d\n", i+1, j+1, distance)
-			sumOfDistances += distance
+	for i := 0; i < len(inputTable.galaxies); i++ {
+		for j := i + 1; j < len(inputTable.galaxies); j++ {
+			dist := distanceBetweenTwoGalaxies(inputTable, inputTable.galaxies[i], inputTable.galaxies[j], 1)
+			sumOfDistances += dist
 		}
 	}
-	fmt.Println("Part1: ", sumOfDistances)
-}
-
-func expand(in table, factor int) table {
-	out := table{
-		elements:     in.elements,
-		noOfGalaxies: in.noOfGalaxies,
-	}
-	for i, targetColumn := range in.emptyColumns {
-		replacement := out.elements
-		var columExpansion []element
-		for f := 0; f < factor; f++ {
-			columExpansion = append(columExpansion, element{
-				strVal: ".",
-				idx:    -1,
-			})
-		}
-		for rIdx := 0; rIdx < len(replacement); rIdx++ {
-			res := make([]element, len(replacement[rIdx])+factor)
-			copy(res, replacement[rIdx][:targetColumn+(i*factor)])
-			copy(res[targetColumn+(i*factor):], columExpansion)
-			copy(res[targetColumn+(i*factor)+factor:], replacement[rIdx][targetColumn+(i*factor):])
-			replacement[rIdx] = res
-		}
-		out.elements = replacement
-	}
-	for i, targetRow := range in.emptyRows {
-		rowsExpansion := make([][]element, factor)
-		er := emptyRow(len(out.elements[0]))
-		for e := range rowsExpansion {
-			rowsExpansion[e] = er
-		}
-		res := make([][]element, len(out.elements)+factor)
-		copy(res, out.elements[:targetRow+(i*factor)])
-		copy(res[targetRow+(i*factor):], rowsExpansion)
-		copy(res[targetRow+(i*factor)+factor:], out.elements[targetRow+(i*factor):])
-		out.elements = res
-	}
-	return out
-}
-
-func emptyRow(size int) []element {
-	var row []element
-	for i := 0; i < size; i++ {
-		row = append(row, element{
-			strVal: ".",
-			idx:    -1,
-		})
-	}
-	return row
-}
-
-type target struct {
-	e             element
-	otherElements []target
-	x, y          int
-	dist          int
-}
-
-func minDistance(t table, from, to int) int {
-	q := queue.New[target]()
-	visited := make([][]bool, len(t.elements))
-	for i := range visited {
-		visited[i] = make([]bool, len(t.elements[0]))
-	}
-	// find source
-	var source target
-sourceFind:
-	for y, line := range t.elements {
-		for x, el := range line {
-			if el.idx == from {
-				source = target{
-					x:    x,
-					y:    y,
-					dist: 0,
-				}
-				break sourceFind
-			}
-		}
-	}
-	q.Push(source)
-	visited[source.y][source.x] = true
-	for q.Length() > 0 {
-		src, ok := q.Pop()
-		if !ok {
-			break
-		}
-		if t.elements[src.y][src.x].idx == to {
-			return src.dist
-		}
-		for _, dir := range allDirections {
-			dx, dy := dir.Points()
-			deltaX := src.x + dx
-			deltaY := src.y + dy
-			// check if target is reachable
-			if deltaY < 0 || deltaX < 0 || deltaY >= len(t.elements) || deltaX >= len(t.elements[0]) {
-				continue
-			}
-			if visited[deltaY][deltaX] {
-				continue
-			}
-			// check if target is reachable
-			q.Push(target{
-				x:    deltaX,
-				y:    deltaY,
-				dist: src.dist + 1,
-			})
-			visited[deltaY][deltaX] = true
-		}
-	}
-	return -1
+	fmt.Println(sumOfDistances)
 }
 
 func part2(content []string) {
+	inputTable := readInput(content)
 
+	var sumOfDistances int
+	for i := 0; i < len(inputTable.galaxies); i++ {
+		for j := i + 1; j < len(inputTable.galaxies); j++ {
+			dist := distanceBetweenTwoGalaxies(inputTable, inputTable.galaxies[i], inputTable.galaxies[j], 999_999)
+			sumOfDistances += dist
+		}
+	}
+	fmt.Println(sumOfDistances)
 }
 
-// utils
 func readInput(content []string) table {
 	out := table{}
-	var lastGalaxy int
-	for i, line := range content {
+	var galaxyCount int
+	for y, line := range content {
 		var rowContainsGalaxies bool
 		var currentLine []element
-		for _, char := range line {
+		for x, char := range line {
 			el := element{
+				x:      x,
+				y:      y,
 				strVal: string(char),
 				idx:    -1,
 			}
 			if el.strVal == "#" {
-				lastGalaxy++
+				galaxyCount++
 				el.isGalaxy = true
-				el.idx = lastGalaxy
+				el.idx = galaxyCount
 				rowContainsGalaxies = true
+				out.galaxies = append(out.galaxies, el)
 			}
 			currentLine = append(currentLine, el)
 		}
 		if !rowContainsGalaxies {
-			out.emptyRows = append(out.emptyRows, i)
+			out.emptyRows = append(out.emptyRows, y)
 		}
 		out.elements = append(out.elements, currentLine)
 	}
@@ -223,8 +89,37 @@ func readInput(content []string) table {
 			out.emptyColumns = append(out.emptyColumns, x)
 		}
 	}
-	out.noOfGalaxies = lastGalaxy
 	return out
+}
+
+func distanceBetweenTwoGalaxies(t table, from, to element, factor int) int {
+	var noOfEmptyCols, numOfEmptyRows int
+	fromX := min(from.x, to.x)
+	fromY := min(from.y, to.y)
+	toX := max(from.x, to.x)
+	toY := max(from.y, to.y)
+	for _, col := range t.emptyColumns {
+		if col > fromX && col < toX {
+			noOfEmptyCols++
+		}
+	}
+	for _, row := range t.emptyRows {
+		if row > fromY && row < toY {
+			numOfEmptyRows++
+		}
+	}
+	return distanceBetweenTwoPoints(fromX, fromY, toX+noOfEmptyCols*factor, toY+numOfEmptyRows*factor)
+}
+
+func distanceBetweenTwoPoints(x1, y1, x2, y2 int) int {
+	return abs(x2-x1) + abs(y2-y1)
+}
+
+func abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
 }
 
 func printImage(image table) {

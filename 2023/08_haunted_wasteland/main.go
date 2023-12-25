@@ -22,7 +22,7 @@ func part1(content []string) {
 	steps := walkToEnd(nextNode, nodes, func(s string) bool {
 		return s == "ZZZ"
 	}, instructions)
-	fmt.Println("Part 1:", steps)
+	fmt.Println(steps)
 }
 
 func part2(content []string) {
@@ -37,7 +37,7 @@ func part2(content []string) {
 		steps[i] = stepsNeeded
 	}
 
-	fmt.Println("Part 2:", lcm(steps))
+	fmt.Println(lcm(steps))
 }
 
 func lcm(nums []int) int {

@@ -25,7 +25,7 @@ func part1(content []string) {
 		prevRowLastElement := generateNextHistoryEntry(entry)
 		res += prevRowLastElement
 	}
-	fmt.Println("Part1: ", res)
+	fmt.Println(res)
 }
 
 func generateNextHistoryEntry(h entryData) int {
@@ -82,7 +82,7 @@ func part2(content []string) {
 		prevRowFirstElement := generatePreviousHistoryEntry(entry)
 		res += prevRowFirstElement
 	}
-	fmt.Println("Part2: ", res)
+	fmt.Println(res)
 
 }
 

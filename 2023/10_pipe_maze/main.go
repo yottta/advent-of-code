@@ -209,7 +209,7 @@ func part2(content []string) {
 	innerElements := countInnerNonExploded(explodedMap, elementsInPath)
 	printExplodedMap(explodedMap, false)
 
-	fmt.Println("Part 2 ", innerElements)
+	fmt.Println(innerElements)
 }
 
 func explode(m [][]*tile) ([][]*tile, *tile) {
