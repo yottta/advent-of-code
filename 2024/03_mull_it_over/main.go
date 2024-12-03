@@ -16,71 +16,130 @@ func main() {
 }
 
 func part1(content []string) {
-	var all []string
-	for _, s := range content {
-		all = append(all, extractor(s)...)
-	}
-	r := strings.NewReplacer("mul(", "", ")", "")
-	var sum int
-	for _, s := range all {
-		res := r.Replace(s)
-		parts := strings.Split(res, ",")
-		x, err := strconv.Atoi(parts[0])
-		aoc.Must(err)
-		y, err := strconv.Atoi(parts[1])
-		aoc.Must(err)
-		sum += x * y
-	}
-	fmt.Println(sum)
-
-}
-
-func part2(content []string) {
-}
-
-func extractor(line string) []string {
 	c := stateMachine{
 		startMatcher: runeMatcher('m', runeMatcher('u', runeMatcher('l', runeMatcher('(', numberAndComma(numberAndEnding()))))),
 	}
-	for _, s := range line {
-		c.consume(s)
+	for _, line := range content {
+		for _, s := range line {
+			c.consume(s)
+		}
 	}
-	return c.res
+
+	var sum int
+	for _, s := range c.res {
+		sum += executeMul(s)
+	}
+	fmt.Println(sum)
 }
 
-type matcherF func(r rune) (int, matcherF)
+func part2(content []string) {
+	c := stateMachine{
+		startMatcher: or(
+			runeMatcher('m', runeMatcher('u', runeMatcher('l', runeMatcher('(', numberAndComma(numberAndEnding()))))),
+			runeMatcher('d', runeMatcher('o', or(
+				runeMatcher('n', runeMatcher('\'', runeMatcher('t', runeMatcher('(', lockOnRune(')'))))),
+				runeMatcher('(', unlockOnRune(')')))),
+			),
+		),
+	}
+	for _, line := range content {
+		for _, s := range line {
+			c.consume(s)
+		}
+	}
+
+	var sum int
+	for _, s := range c.res {
+		sum += executeMul(s)
+	}
+	fmt.Println(sum)
+}
+
+var r = strings.NewReplacer("mul(", "", ")", "")
+
+func executeMul(mul string) int {
+	res := r.Replace(mul)
+	parts := strings.Split(res, ",")
+	x, err := strconv.Atoi(parts[0])
+	aoc.Must(err)
+	y, err := strconv.Atoi(parts[1])
+	aoc.Must(err)
+	return x * y
+}
+
+type matcherF func(r rune) (stateMachineCmd, matcherF)
+
+func or(matchers ...matcherF) matcherF {
+	return func(r rune) (stateMachineCmd, matcherF) {
+		for _, m := range matchers {
+			if res, next := m(r); res == 1 {
+				return res, next
+			}
+		}
+		return stateMachineCmdReset, nil
+	}
+}
 
 func runeMatcher(exp rune, next matcherF) matcherF {
-	return func(r rune) (int, matcherF) {
+	return func(r rune) (stateMachineCmd, matcherF) {
 		if exp == r {
-			return 1, next
+			return stateMachineCmdStoreToBuffer, next
 		}
 		return 0, nil
 	}
 }
 
 func numberAndComma(next matcherF) matcherF {
-	return func(r rune) (int, matcherF) {
+	return func(r rune) (stateMachineCmd, matcherF) {
 		if unicode.IsDigit(r) {
-			return 1, nil
+			return stateMachineCmdStoreToBuffer, nil
 		}
 		if r == ',' {
-			return 1, next
+			return stateMachineCmdStoreToBuffer, next
 		}
-		return 0, nil
+		return stateMachineCmdReset, nil
 	}
 }
+
 func numberAndEnding() matcherF {
-	return func(r rune) (int, matcherF) {
+	return func(r rune) (stateMachineCmd, matcherF) {
 		if unicode.IsDigit(r) {
-			return 1, nil
+			return stateMachineCmdStoreToBuffer, nil
 		}
 		if r == ')' {
-			return 2, nil
+			return stateMachineCmdWriteAndReset, nil
 		}
-		return 0, nil
+		return stateMachineCmdReset, nil
 	}
 }
+
+func lockOnRune(exp rune) matcherF {
+	return func(r rune) (stateMachineCmd, matcherF) {
+		if exp == r {
+			return stateMachineCmdLock, nil
+		}
+		return stateMachineCmdReset, nil
+	}
+}
+
+func unlockOnRune(exp rune) matcherF {
+	return func(r rune) (stateMachineCmd, matcherF) {
+		if exp == r {
+			return stateMachineCmdUnlock, nil
+		}
+		return stateMachineCmdReset, nil
+	}
+}
+
+type stateMachineCmd int
+
+const (
+	stateMachineCmdReset = iota
+	stateMachineCmdStoreToBuffer
+	stateMachineCmdWriteAndReset
+	stateMachineCmdLock
+	stateMachineCmdUnlock
+)
 
 type stateMachine struct {
 	startMatcher matcherF
@@ -88,27 +147,42 @@ type stateMachine struct {
 
 	buf bytes.Buffer
 	res []string
+
+	locked bool
 }
 
-// 0 stopped; 1 running; 2 finished
+// 0 stopped; 1 running; 2 finished;
 func (sm *stateMachine) consume(r rune) {
 	if sm.nextMatcher == nil {
 		sm.nextMatcher = sm.startMatcher
 	}
 	res, next := sm.nextMatcher(r)
 	switch res {
-	case 0:
+	case stateMachineCmdReset:
 		sm.buf.Reset()
 		sm.nextMatcher = sm.startMatcher
-	case 1:
+	case stateMachineCmdStoreToBuffer:
 		sm.buf.WriteRune(r)
 		if next != nil {
 			sm.nextMatcher = next
 		}
-	case 2:
+	case stateMachineCmdWriteAndReset:
 		sm.buf.WriteRune(r)
+		if sm.locked {
+			sm.nextMatcher = sm.startMatcher
+			sm.buf.Reset()
+			break
+		}
 		sm.res = append(sm.res, sm.buf.String())
 		sm.buf.Reset()
 		sm.nextMatcher = sm.startMatcher
+	case stateMachineCmdLock:
+		sm.buf.Reset()
+		sm.nextMatcher = sm.startMatcher
+		sm.locked = true
+	case stateMachineCmdUnlock:
+		sm.buf.Reset()
+		sm.nextMatcher = sm.startMatcher
+		sm.locked = false
 	}
 }
