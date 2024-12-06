@@ -51,6 +51,51 @@ func validUpdate(update []int, ordering map[int][]int) bool {
 }
 
 func part2(content []string) {
+	ordering, updates := readInputInOrderingRulesAndUpdates(content)
+	var reorderedUpdates [][]int
+	for _, update := range updates {
+		if updateOrder(update, ordering) {
+			reorderedUpdates = append(reorderedUpdates, update)
+		}
+	}
+	var sum int
+	for _, update := range reorderedUpdates {
+		fmt.Println(update)
+		sum += update[len(update)/2]
+	}
+	fmt.Println(sum)
+}
+
+func updateOrder(update []int, rules map[int][]int) bool {
+	var updated bool
+	var incrementI bool
+	for i := 0; i < len(update); {
+		if incrementI {
+			i++
+		}
+		if i >= len(update) {
+			break
+		}
+		iPage := update[i]
+		afterPageX := rules[iPage]
+		for j := i + 1; j < len(update); j++ {
+			jPage := update[j]
+			if slices.Contains(afterPageX, jPage) {
+				incrementI = true
+				continue
+			}
+			jNeedsToBeBefore := rules[jPage]
+			if slices.Contains(jNeedsToBeBefore, iPage) {
+				update[i] = jPage
+				update[j] = iPage
+				updated = true
+				incrementI = false
+				break
+			}
+			incrementI = true
+		}
+	}
+	return updated
 }
 
 func readInputInOrderingRulesAndUpdates(content []string) (map[int][]int, [][]int) {
