@@ -140,6 +140,33 @@ func part1(content []string) {
 }
 
 func part2(content []string) {
+	m := toMatrix(content)
+
+	type point struct {
+		x, y int
+	}
+	isMas := func(p point) bool {
+		topLeft := m[p.x-1][p.y-1]
+		topRight := m[p.x+1][p.y-1]
+		bottomLeft := m[p.x-1][p.y+1]
+		bottomRight := m[p.x+1][p.y+1]
+		firstDiagonalMas := (topLeft == 'M' && bottomRight == 'S') || (topLeft == 'S' && bottomRight == 'M')
+		secondDiagonalMas := (topRight == 'M' && bottomLeft == 'S') || (topRight == 'S' && bottomLeft == 'M')
+		return firstDiagonalMas && secondDiagonalMas
+
+	}
+	countedXCenters := map[point]struct{}{}
+	for x := 1; x < len(m[0])-1; x++ {
+		for y := 1; y < len(m)-1; y++ {
+			if m[x][y] == 'A' {
+				p := point{x: x, y: y}
+				if isMas(p) {
+					countedXCenters[p] = struct{}{}
+				}
+			}
+		}
+	}
+	fmt.Println(len(countedXCenters))
 }
 
 func toMatrix(content []string) [][]rune {
