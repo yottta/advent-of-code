@@ -62,6 +62,15 @@ func LockOnRune(exp rune) MatcherFunc {
 	}
 }
 
+func StopOnRune(exp rune) MatcherFunc {
+	return func(r rune) (StateMachineCmd, MatcherFunc) {
+		if exp == r {
+			return StateMachineCmdWriteAndReset, nil
+		}
+		return StateMachineCmdReset, nil
+	}
+}
+
 func UnlockOnRune(exp rune) MatcherFunc {
 	return func(r rune) (StateMachineCmd, MatcherFunc) {
 		if exp == r {
@@ -71,7 +80,7 @@ func UnlockOnRune(exp rune) MatcherFunc {
 	}
 }
 
-func (sm *StateMachine) Consume(r rune) {
+func (sm *StateMachine) Consume(r rune) StateMachineCmd {
 	if sm.nextMatcher == nil {
 		sm.nextMatcher = sm.startMatcher
 	}
@@ -104,6 +113,7 @@ func (sm *StateMachine) Consume(r rune) {
 		sm.nextMatcher = sm.startMatcher
 		sm.locked = false
 	}
+	return res
 }
 
 func (sm *StateMachine) Results() []string {
