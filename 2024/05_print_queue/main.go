@@ -15,7 +15,7 @@ func main() {
 }
 
 func part1(content []string) {
-	ordering, updates := orderingAndUpdates(content)
+	ordering, updates := readInputInOrderingRulesAndUpdates(content)
 	var validUpdates [][]int
 	for _, update := range updates {
 		if validUpdate(update, ordering) {
@@ -28,51 +28,6 @@ func part1(content []string) {
 		sum += update[len(update)/2]
 	}
 	fmt.Println(sum)
-}
-
-func part2(content []string) {
-}
-
-func orderingAndUpdates(content []string) (map[int][]int, [][]int) {
-	var (
-		processUpdates bool
-		ordering       = map[int][]int{}
-		updates        [][]int
-	)
-	for _, s := range content {
-		if strings.TrimSpace(s) == "" {
-			processUpdates = true
-			continue
-		}
-		if !processUpdates {
-			processOrder(s, ordering)
-			continue
-		}
-		updates = append(updates, processUpdate(s))
-	}
-	return ordering, updates
-}
-
-func processOrder(s string, alreadyExisting map[int][]int) {
-	parts := strings.Split(s, "|")
-	before, err := strconv.Atoi(parts[0])
-	aoc.Must(err)
-	after, err := strconv.Atoi(parts[1])
-	aoc.Must(err)
-	afterPages, _ := alreadyExisting[before]
-	afterPages = append(afterPages, after)
-	alreadyExisting[before] = afterPages
-}
-
-func processUpdate(s string) []int {
-	parts := strings.Split(s, ",")
-	out := make([]int, len(parts))
-	for i, page := range parts {
-		p, err := strconv.Atoi(page)
-		aoc.Must(err)
-		out[i] = p
-	}
-	return out
 }
 
 func validUpdate(update []int, ordering map[int][]int) bool {
@@ -93,4 +48,49 @@ func validUpdate(update []int, ordering map[int][]int) bool {
 		}
 	}
 	return failed == 0
+}
+
+func part2(content []string) {
+}
+
+func readInputInOrderingRulesAndUpdates(content []string) (map[int][]int, [][]int) {
+	var (
+		processUpdates bool
+		ordering       = map[int][]int{}
+		updates        [][]int
+	)
+	for _, s := range content {
+		if strings.TrimSpace(s) == "" {
+			processUpdates = true
+			continue
+		}
+		if !processUpdates {
+			parseOrder(s, ordering)
+			continue
+		}
+		updates = append(updates, parseUpdate(s))
+	}
+	return ordering, updates
+}
+
+func parseOrder(s string, alreadyExisting map[int][]int) {
+	parts := strings.Split(s, "|")
+	before, err := strconv.Atoi(parts[0])
+	aoc.Must(err)
+	after, err := strconv.Atoi(parts[1])
+	aoc.Must(err)
+	afterPages, _ := alreadyExisting[before]
+	afterPages = append(afterPages, after)
+	alreadyExisting[before] = afterPages
+}
+
+func parseUpdate(s string) []int {
+	parts := strings.Split(s, ",")
+	out := make([]int, len(parts))
+	for i, page := range parts {
+		p, err := strconv.Atoi(page)
+		aoc.Must(err)
+		out[i] = p
+	}
+	return out
 }
