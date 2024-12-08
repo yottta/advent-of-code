@@ -18,14 +18,23 @@ func part1(content []string) {
 	var res int
 
 	for _, r := range results {
-		if r.valid() {
+		if r.valid(part1Ops) {
 			res += r.val
 		}
 	}
 	fmt.Println(res)
 }
-func part2(content []string) {
 
+func part2(content []string) {
+	results := parseData(content)
+	var res int
+
+	for _, r := range results {
+		if r.valid(part2Ops) {
+			res += r.val
+		}
+	}
+	fmt.Println(res)
 }
 
 func parseData(content []string) []*result {
@@ -66,10 +75,12 @@ type operator int
 const (
 	opAdd = iota + 1
 	opMultiply
+	opConcat
 )
 
 var (
-	allOps = []operator{opAdd, opMultiply}
+	part1Ops = []operator{opAdd, opMultiply}
+	part2Ops = []operator{opAdd, opMultiply, opConcat}
 )
 
 type value struct {
@@ -77,9 +88,9 @@ type value struct {
 	val  int
 }
 
-func (v *value) calc(prevVal int, sum int) bool {
+func (v *value) calc(prevVal int, sum int, opsAllowed []operator) bool {
 	if v.next == nil {
-		for _, op := range allOps {
+		for _, op := range opsAllowed {
 			val := applyOp(prevVal, v.val, op)
 			if val == sum {
 				return true
@@ -87,9 +98,9 @@ func (v *value) calc(prevVal int, sum int) bool {
 		}
 		return false
 	}
-	for _, op := range allOps {
+	for _, op := range opsAllowed {
 		val := applyOp(prevVal, v.val, op)
-		if v.next.calc(val, sum) {
+		if v.next.calc(val, sum, opsAllowed) {
 			return true
 		}
 	}
@@ -101,11 +112,11 @@ type result struct {
 	firstValue *value
 }
 
-func (r *result) valid() bool {
+func (r *result) valid(opsAllowed []operator) bool {
 	if r.firstValue == nil {
 		return r.val == 0
 	}
-	return r.firstValue.calc(0, r.val)
+	return r.firstValue.calc(0, r.val, opsAllowed)
 }
 
 func applyOp(v1, v2 int, op operator) int {
@@ -117,6 +128,13 @@ func applyOp(v1, v2 int, op operator) int {
 			v1 = 1
 		}
 		return v1 * v2
+	case opConcat:
+		if v1 == 0 {
+			return v2
+		}
+		res, err := strconv.Atoi(fmt.Sprintf("%d%d", v1, v2))
+		aoc.Must(err)
+		return res
 	}
 	panic(fmt.Errorf("invalid operator %v", op))
 }
