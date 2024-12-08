@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 
 	aoc2024 "github.com/yottta/advent-of-code/2024"
 )
@@ -18,6 +19,11 @@ func part1(content []string) {
 
 }
 func part2(content []string) {
+	_map, sold := parseContent(content)
+	printMap(_map, sold, false)
+	res := walk(_map, sold)
+	printMap(_map, sold, true)
+	fmt.Println(len(res))
 }
 
 func walk(_map [][]position, sold *soldier) map[position]struct{} {
@@ -25,6 +31,7 @@ func walk(_map [][]position, sold *soldier) map[position]struct{} {
 		out = map[position]struct{}{}
 	)
 
+	_map[sold.currentPosition.y][sold.currentPosition.x].passes++
 	for {
 		nextSoldPos := sold.nextPosition()
 		// got out of the map to the left or right
@@ -40,6 +47,7 @@ func walk(_map [][]position, sold *soldier) map[position]struct{} {
 			sold.rotate()
 			continue
 		}
+		_map[nextSoldPos.y][nextSoldPos.x].passes++
 		sold.currentPosition = nextSoldPos
 		out[nextSoldPos] = struct{}{} // register the place where the soldier was
 	}
@@ -75,8 +83,7 @@ func parseContent(content []string) ([][]position, *soldier) {
 	return _map, sold
 }
 
-func printMap(_map [][]position, sold *soldier) {
-	fmt.Println(sold)
+func printMap(_map [][]position, sold *soldier, passes bool) {
 	for x := 0; x < len(_map); x++ {
 		fmt.Println()
 		for y := 0; y < len(_map[x]); y++ {
@@ -84,6 +91,8 @@ func printMap(_map [][]position, sold *soldier) {
 			val := "."
 			if p.obstacle {
 				val = "#"
+			} else if passes {
+				val = strconv.Itoa(p.passes)
 			}
 			if p == sold.currentPosition {
 				val = "S"
