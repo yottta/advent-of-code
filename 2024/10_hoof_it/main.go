@@ -25,6 +25,16 @@ func part1(content []string) {
 }
 
 func part2(content []string) {
+	m, trailheads := parseMap(content)
+
+	var sum int
+	for _, trailhead := range trailheads {
+		ends := trailhead.walk(m)
+		for e := range maps.Values(ends) {
+			sum += e
+		}
+	}
+	fmt.Println(sum)
 }
 
 func parseMap(content []string) (out [][]step, trailheads []step) {
@@ -56,8 +66,8 @@ type step struct {
 	val int
 }
 
-func (s *step) walk(m [][]step) map[step]struct{} {
-	visitedPeaks := map[step]struct{}{}
+func (s *step) walk(m [][]step) map[step]int {
+	visitedPeaks := map[step]int{}
 	nextVal := s.val + 1
 	for _, point := range possibleMovements(s.p, len(m[0]), len(m)) {
 		nextStep := m[point.Y][point.X]
@@ -65,11 +75,17 @@ func (s *step) walk(m [][]step) map[step]struct{} {
 			continue
 		}
 		if nextStep.val == 9 {
-			visitedPeaks[nextStep] = struct{}{}
+			pc, _ := visitedPeaks[nextStep]
+			pc++
+			visitedPeaks[nextStep] = pc
 			continue
 		}
 		r := nextStep.walk(m)
-		maps.Copy(visitedPeaks, r)
+		for end, reaches := range r {
+			pc, _ := visitedPeaks[end]
+			pc = pc + reaches
+			visitedPeaks[end] = pc
+		}
 	}
 	return visitedPeaks
 }
