@@ -15,32 +15,70 @@ func main() {
 
 func part1(content []string) {
 	pebs := parseContent(content[0])
-	var sum uint64
-	for _, peb := range pebs {
-		sum += transform(peb, 25)
+	var sum int
+	for i := 0; i < 6; i++ {
+		pebs = transform(pebs)
+	}
+
+	for s, c := range pebs {
+		fmt.Println(s, c)
+		sum += c
 	}
 
 	fmt.Println(sum)
 }
 
+// 223767208675409 too low
 func part2(content []string) {
 	pebs := parseContent(content[0])
-	var sum uint64
-	for _, peb := range pebs {
-		sum += transform(peb, 45)
+	var sum int
+	for i := 0; i < 75; i++ {
+		pebs = transform(pebs)
+	}
+
+	for s, c := range pebs {
+		fmt.Println(s, c)
+		sum += c
 	}
 
 	fmt.Println(sum)
 }
 
-func parseContent(content string) []uint64 {
+func parseContent(content string) map[uint64]int {
 	var (
-		pebs []uint64
+		pebs = map[uint64]int{}
 	)
 	for _, p := range strings.Split(content, " ") {
 		val, err := strconv.ParseUint(p, 10, 0)
 		aoc.Must(err)
-		pebs = append(pebs, val)
+		exists := pebs[val]
+		pebs[val] = exists + 1
 	}
 	return pebs
+}
+
+func transform(in map[uint64]int) map[uint64]int {
+	temp := map[uint64]int{}
+	for val, c := range in {
+		if val == 0 {
+			cc := temp[1]
+			temp[1] = cc + c
+			continue
+		}
+		if strVal := strconv.FormatUint(val, 10); len(strVal)%2 == 0 {
+			currVal, err := strconv.ParseUint(strVal[:len(strVal)/2], 10, 0)
+			aoc.Must(err)
+			newVal, err := strconv.ParseUint(strVal[len(strVal)/2:], 10, 0)
+			aoc.Must(err)
+			currValC := temp[currVal]
+			temp[currVal] = currValC + c
+			newValC := temp[newVal]
+			temp[newVal] = newValC + c
+			continue
+		}
+		v := val * 2024
+		ex := temp[v]
+		temp[v] = c + ex
+	}
+	return temp
 }
