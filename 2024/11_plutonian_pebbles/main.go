@@ -24,11 +24,10 @@ func part1(content []string) {
 }
 
 func part2(content []string) {
-	return
 	pebs := parseContent(content[0])
 	var sum uint64
 	for _, peb := range pebs {
-		sum += transform(peb, 75)
+		sum += transform(peb, 45)
 	}
 
 	fmt.Println(sum)
