@@ -14,96 +14,34 @@ func main() {
 }
 
 func part1(content []string) {
-	peb := parseContent(content[0])
-	peb.print()
-	fmt.Println()
-	for i := 0; i < 25; i++ {
-		peb.transform()
-		//peb.print()
-		//fmt.Println()
+	pebs := parseContent(content[0])
+	var sum uint64
+	for _, peb := range pebs {
+		sum += transform(peb, 25)
 	}
-	fmt.Println(peb.count())
-}
 
-func parseContent(content string) *pebble {
-	var (
-		first, last *pebble
-	)
-	for _, p := range strings.Split(content, " ") {
-		val, err := strconv.Atoi(p)
-		aoc.Must(err)
-		newP := pebble{
-			val:    val,
-			strVal: p,
-		}
-		if first == nil {
-			first = &newP
-			last = first
-			continue
-		}
-		last.next = &newP
-		last = last.next
-	}
-	return first
+	fmt.Println(sum)
 }
 
 func part2(content []string) {
+	return
+	pebs := parseContent(content[0])
+	var sum uint64
+	for _, peb := range pebs {
+		sum += transform(peb, 75)
+	}
 
+	fmt.Println(sum)
 }
 
-type pebble struct {
-	val    int
-	strVal string
-	next   *pebble
-}
-
-func (p *pebble) transform() {
+func parseContent(content string) []uint64 {
 	var (
-		newNext *pebble
+		pebs []uint64
 	)
-	switch {
-	case p.val == 0:
-		p.val = 1
-		p.strVal = strconv.Itoa(p.val)
-	case len(p.strVal)%2 == 0:
-		currVal, err := strconv.Atoi(p.strVal[:len(p.strVal)/2])
+	for _, p := range strings.Split(content, " ") {
+		val, err := strconv.ParseUint(p, 10, 0)
 		aoc.Must(err)
-		newVal, err := strconv.Atoi(p.strVal[len(p.strVal)/2:])
-		aoc.Must(err)
-		p.val = currVal
-		p.strVal = strconv.Itoa(currVal)
-		newNext = &pebble{
-			val:    newVal,
-			strVal: strconv.Itoa(newVal),
-		}
-	default:
-		p.val = p.val * 2024
-		p.strVal = strconv.Itoa(p.val)
+		pebs = append(pebs, val)
 	}
-	if p.val == 0 {
-		p.val = 1
-	}
-	if p.next != nil {
-		p.next.transform()
-	}
-	if newNext != nil {
-		newNext.next = p.next
-		p.next = newNext
-	}
-}
-
-func (p *pebble) print() {
-	fmt.Print(p.strVal)
-	if p.next == nil {
-		return
-	}
-	fmt.Print(" ")
-	p.next.print()
-}
-
-func (p *pebble) count() int {
-	if p == nil {
-		return 0
-	}
-	return 1 + p.next.count()
+	return pebs
 }
