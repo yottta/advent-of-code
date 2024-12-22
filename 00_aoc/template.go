@@ -3,12 +3,13 @@ package _0_aoc
 import (
 	"flag"
 	"fmt"
+	"log/slog"
 	"time"
 )
 
 var verbose bool
 
-// Deprecated - use BasiccRunV2 instead
+// Deprecated - use BasicRunV2 instead
 func BasicRun(part1, part2 func([]string)) {
 	var (
 		dataFilePath string
@@ -19,7 +20,9 @@ func BasicRun(part1, part2 func([]string)) {
 	flag.BoolVar(&verbose, "v", false, "Add this for more information during running if available")
 	flag.Parse()
 
-	Verbose(verbose)
+	if verbose {
+		slog.SetLogLoggerLevel(slog.LevelDebug)
+	}
 
 	content, err := ReadFile(dataFilePath)
 	Must(err)
@@ -53,7 +56,9 @@ func BasicRunV2(part1, part2 func([]string), testData bool, problemIdx, year str
 	flag.BoolVar(&verbose, "v", false, "Add this for more information during running if available")
 	flag.Parse()
 
-	Verbose(verbose)
+	if verbose {
+		slog.SetLogLoggerLevel(slog.LevelDebug)
+	}
 
 	content, err := ReadFile(dataFilePath)
 	Must(err)
@@ -88,7 +93,9 @@ func RunV3(year, dataDir string, cfg ...RunCfg) {
 	flag.BoolVar(&verbose, "v", false, "Add this for more information during running if available")
 	flag.Parse()
 
-	Verbose(verbose)
+	if verbose {
+		slog.SetLogLoggerLevel(slog.LevelDebug)
+	}
 
 	var (
 		content []string

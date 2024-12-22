@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log/slog"
 	"strconv"
 
 	aoc "github.com/yottta/advent-of-code/00_aoc"
@@ -29,9 +30,8 @@ func part1(content []string) {
 			if f.trees[i][j].visibility.visible() {
 				totalVisible++
 			}
-			aoc.Logf("%d(%s) ", f.trees[i][j].height, string(strconv.FormatBool(f.trees[i][j].visibility.visible())[0]))
+			slog.Debug("%d(%s) ", f.trees[i][j].height, string(strconv.FormatBool(f.trees[i][j].visibility.visible())[0]))
 		}
-		aoc.Log("")
 	}
 	fmt.Println(totalVisible)
 }
@@ -56,9 +56,8 @@ func part2(content []string) {
 			if scenery > maxScenery {
 				maxScenery = scenery
 			}
-			aoc.Logf("%d(%00d) ", t.height, scenery)
+			slog.Debug("%d(%00d) ", t.height, scenery)
 		}
-		aoc.Log("")
 	}
 	fmt.Println(maxScenery)
 }

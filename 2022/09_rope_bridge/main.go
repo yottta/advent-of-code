@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log/slog"
 	"strconv"
 	"strings"
 
@@ -24,7 +25,7 @@ func part1(content []string) {
 		parts := strings.Split(line, " ")
 		steps, err := strconv.Atoi(parts[1])
 		aoc.Must(err)
-		aoc.Log(line)
+		slog.Debug(line)
 		for i := 0; i < steps; i++ {
 			oldHeadPos := knotsPositions[0]
 			switch parts[0] {
@@ -84,7 +85,7 @@ func part2(content []string) {
 		steps, err := strconv.Atoi(parts[1])
 		aoc.Must(err)
 
-		aoc.Log(line)
+		slog.Debug(line)
 		for i := 0; i < steps; i++ {
 			var deltaX, deltaY int
 			switch parts[0] {
@@ -125,9 +126,9 @@ func part2(content []string) {
 			}
 		}
 
-		aoc.Log(line)
+		slog.Debug(line)
 		drawPoints(knotsPositions...)
-		aoc.Log("")
+		slog.Debug("")
 	}
 
 	drawPath(points)

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log/slog"
 	"sort"
 	"strconv"
 	"strings"
@@ -271,13 +272,12 @@ func newTargetResolver(info string) (*targetResolver, error) {
 }
 
 func logMonkeyItems(round int, monkeys []monkey) {
-	aoc.Logf("Round %d ended\n", round)
+	slog.Debug("Round %d ended\n", round)
 	for _, m := range monkeys {
 		itemNames := make([]string, len(m.items))
 		for i, it := range m.items {
 			itemNames[i] = strconv.Itoa(it.worryLvl)
 		}
-		aoc.Log(fmt.Sprintf("Monkey %d items: %s", m.id, strings.Join(itemNames, ",")))
+		slog.Debug("Monkey %d items: %s", m.id, strings.Join(itemNames, ","))
 	}
-	aoc.Log("")
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log/slog"
 	"strconv"
 	"strings"
 
@@ -23,7 +24,7 @@ func part1(content []string) {
 	var safe int
 	for i, v := range reports {
 		if v.safe() {
-			aoc.Log(fmt.Sprintf("%d report is safe", i))
+			slog.Debug("%d report is safe", i)
 			safe++
 		}
 	}
@@ -37,7 +38,7 @@ func part2(content []string) {
 	var safe int
 	for i, v := range reports {
 		if v.safe() {
-			aoc.Log(fmt.Sprintf("%d report is safe", i))
+			slog.Debug("%d report is safe", i)
 			safe++
 		}
 	}
