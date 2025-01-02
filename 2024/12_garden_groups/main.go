@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"log/slog"
+	"math"
 
 	_0_aoc "github.com/yottta/advent-of-code/00_aoc"
 	"github.com/yottta/advent-of-code/00_aoc/queue"
@@ -13,6 +15,7 @@ func main() {
 }
 
 func part1(content []string) {
+	return
 	m := parseContent(content)
 	//printMap(m)
 	toBeProcessed := queue.New[*plot]()
@@ -24,19 +27,50 @@ func part1(content []string) {
 		}
 		walk(next, m, toBeProcessed)
 	}
-	noRegions := markRegions(m)
-	fmt.Printf("found %d regions\n", noRegions)
+	noRegions := extractRegions(m)
+	slog.Debug("found %d regions", noRegions)
 	surfaces := gatherSurfaces(m)
 	var sum int
 	for _, s := range surfaces {
 		price := s.area * s.perim
-		//fmt.Printf("%s (area: %d; perim: %d) price is %d\n", s.plant, s.area, s.perim, price)
+		slog.Debug("%s (area: %d; perim: %d) price is %d\n", s.plant, s.area, s.perim, price)
 		sum += price
 	}
 	fmt.Println(sum)
 }
 
 func part2(content []string) {
+	m := parseContent(content)
+	toBeProcessed := queue.New[*plot]()
+	toBeProcessed.Push(m[0][0])
+	for {
+		next, ok := toBeProcessed.Pop()
+		if !ok {
+			break
+		}
+		walk(next, m, toBeProcessed)
+	}
+	printMap(m)
+	markRegions(m)
+	regionMaps := extractRegions(m)
+	regionsSurfaces := map[int]regionSurface{}
+	for regId, regMap := range regionMaps {
+		//fmt.Println(regId)
+		perim := calculateRegionPerim(regMap)
+		area := calculateRegionArea(regMap)
+		regionsSurfaces[regId] = regionSurface{
+			perim: perim,
+			area:  area,
+		}
+	}
+
+	var sum int
+	for regId, s := range regionsSurfaces {
+		price := s.area * s.perim
+		fmt.Println("regionData:", "regionId", regId, "area", s.area, "perim", s.perim, "price", price)
+		sum += price
+	}
+	fmt.Println(sum)
 }
 
 type regionSurface struct {
@@ -74,7 +108,6 @@ func walk(p *plot, m [][]*plot, q queue.Queue[*plot]) {
 		}
 	}
 }
-
 func markRegions(m [][]*plot) int {
 	lastRegionId := 1
 	for y := 0; y < len(m); y++ {
@@ -83,6 +116,7 @@ func markRegions(m [][]*plot) int {
 			if regionStartPlot.regionId != 0 {
 				continue
 			}
+			fmt.Println("letter", regionStartPlot.plant, "regionId", lastRegionId)
 			regionStartPlot.regionId = lastRegionId
 			lastRegionId++
 			nextInRegion := regionStartPlot.nextInRegion
@@ -100,6 +134,77 @@ func markRegions(m [][]*plot) int {
 		}
 	}
 	return lastRegionId - 1
+}
+
+type regionLimits struct {
+	minX, minY, maxX, maxY int
+}
+
+func extractRegions(m [][]*plot) map[int][][]*plot {
+	limits := map[int]regionLimits{}
+	for y := 0; y < len(m); y++ {
+		for x := 0; x < len(m[y]); x++ {
+			p := m[y][x]
+			regionLim, ok := limits[p.regionId]
+			if !ok {
+				regionLim = regionLimits{
+					minX: math.MaxInt,
+					minY: math.MaxInt,
+					maxX: math.MinInt,
+					maxY: math.MinInt,
+				}
+			}
+			if y < regionLim.minY {
+				regionLim.minY = y
+			}
+			if y > regionLim.maxY {
+				regionLim.maxY = y
+			}
+			if x < regionLim.minX {
+				regionLim.minX = x
+			}
+			if x > regionLim.maxX {
+				regionLim.maxX = x
+			}
+			limits[p.regionId] = regionLim
+		}
+	}
+	regionMaps := map[int][][]*plot{}
+	for regionId, lims := range limits {
+		mapXSize := lims.maxX - lims.minX + 1
+		mapYSize := lims.maxY - lims.minY + 1
+		regionMap := make([][]*plot, mapYSize+2)
+		for i := 0; i < len(regionMap); i++ {
+			regionMap[i] = make([]*plot, mapXSize+2)
+		}
+		// NOTE: put the region in its own man
+		regionMapY := 0
+		for y := lims.minY; y <= lims.maxY; y++ {
+			regionMapY++
+			regionMapX := 0
+			for x := lims.minX; x <= lims.maxX; x++ {
+				regionMapX++
+				currP := m[y][x]
+				if currP.regionId != regionId {
+					continue
+				}
+				regionMap[regionMapY][regionMapX] = &plot{
+					regionId: currP.regionId,
+					coord: _0_aoc.Point{
+						X: regionMapX,
+						Y: regionMapY,
+					},
+					plant:     currP.plant,
+					processed: false,
+				}
+			}
+		}
+		if regionId == 2 {
+			regionMaps[regionId] = regionMap
+			break
+		}
+	}
+	return regionMaps
 }
 
 func gatherSurfaces(m [][]*plot) map[int]regionSurface {
@@ -139,6 +244,11 @@ func parseContent(content []string) [][]*plot {
 func printMap(m [][]*plot) {
 	for y := 0; y < len(m); y++ {
 		for x := 0; x < len(m[y]); x++ {
+			p := m[y][x]
+			if p == nil {
+				fmt.Print(".")
+				continue
+			}
 			fmt.Print(m[y][x].plant)
 		}
 		fmt.Println()

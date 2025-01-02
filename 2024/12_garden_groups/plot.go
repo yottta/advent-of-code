@@ -8,7 +8,7 @@ type plot struct {
 	plant           string
 	area, perimeter int
 	processed       bool
-
+	
 	nextInRegion []*plot
 }
 
